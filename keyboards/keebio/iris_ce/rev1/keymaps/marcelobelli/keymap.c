@@ -4,7 +4,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include "action_layer.h"
+#include "action_tapping.h"
 #include "color.h"
+#include "config.h"
 #include "info_config.h"
 #include "keycodes.h"
 #include "keymap_common.h"
@@ -17,6 +19,8 @@
 
 #include "features/achordion.h"
 
+#define LOCK_SCREEN LGUI(LCTL(KC_Q))
+
 enum custom_layers { _QWERTY, _LOWER, _RAISE };
 
 enum custom_keycodes {
@@ -27,6 +31,7 @@ enum custom_keycodes {
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
 
     [_QWERTY] = LAYOUT(
+        //
         // ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐                        ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
         // ├    =    ┼    1    ┼    2    ┼    3    ┼    4    ┼    5    ┤                        ├    6    ┼    7    ┼    8    ┼    9    ┼    0    ┼    -    ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
@@ -36,7 +41,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐    ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
         // ├   ENT   ┼    Z    ┼    X    ┼    C    ┼    V    ┼    B    ┼   HOME  ┤    ├   END   ┼    N    ┼    M    ┼    ,    ┼    .    ┼    /    ┼    `    ┤
         // ├─────────┴─────────┴─────────┴────┬────┴────┬────┴────┬────┴────┬────┘    └────┬────┴────┬────┴────┬────┴────┬────┴─────────┴─────────┴─────────┘
-        //                                    ├  LCMD   ┼  LOWER  ┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
+        //                                    ├  LCMD   ┼LOWER/SPC┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
         //
         KC_EQL, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS,
@@ -47,7 +52,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //
         KC_ENT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_HOME, KC_END, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_GRV,
         //
-        KC_LGUI, TL_LOWR, KC_SPC, KC_ENT, TL_UPPR, KC_BSPC
+        KC_LGUI, KC_BSPC, LT(_LOWER, KC_SPC), KC_ENT, MO(_RAISE), KC_BSPC
         //
         ),
 
@@ -67,17 +72,18 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //
         KC_TILD, KC_EXLM, KC_AT, KC_HASH, KC_DLR, KC_PERC, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_PGUP,
         //
-        KC_GRV, _______, _______, _______, QK_BOOT, KC_LBRC, KC_RBRC, _______, _______, _______, _______, KC_PGDN,
+        KC_GRV, KC_NO, KC_NO, KC_NO, QK_BOOT, KC_LBRC, KC_RBRC, KC_NO, KC_NO, KC_NO, KC_NO, KC_PGDN,
         //
-        KC_DEL, _______, _______, _______, _______, _______, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_PLUS, KC_BSLS,
+        KC_DEL, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_PLUS, KC_BSLS,
         //
-        RGB_MOD, EE_CLR, _______, _______, _______, KC_LCBR, KC_LPRN, KC_RPRN, KC_RCBR, KC_P1, KC_P2, KC_P3, KC_MINS, _______,
+        RGB_MOD, EE_CLR, KC_NO, KC_NO, KC_NO, KC_LCBR, KC_LPRN, KC_RPRN, KC_RCBR, KC_P1, KC_P2, KC_P3, KC_MINS, KC_NO,
         //
-        _______, _______, KC_DEL, KC_DEL, _______, KC_P0
+        KC_NO, KC_NO, KC_DEL, KC_DEL, KC_NO, KC_P0
         //
         ),
 
     [_RAISE] = LAYOUT(
+        //
         // ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐                        ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
         // ├         ┼         ┼         ┼         ┼         ┼         ┤                        ├         ┼         ┼         ┼         ┼         ┼  BOOT   ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
@@ -90,15 +96,15 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //                                    ├  LCMD   ┼  LOWER  ┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
         //
-        _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______, _______,
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
         //
-        _______, KC_KP_MINUS, KC_KP_PLUS, KC_KP_EQUAL, DOUBLE_EQUAL, NOT_EQUAL, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, QK_BOOT,
+        KC_NO, KC_KP_MINUS, KC_KP_PLUS, KC_KP_EQUAL, DOUBLE_EQUAL, NOT_EQUAL, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, QK_BOOT,
         //
-        RGB_MOD, KC_KP_ASTERISK, KC_MNXT, KC_VOLU, KC_PGUP, KC_UNDS, KC_EQL, KC_HOME, RGB_HUI, RGB_SAI, RGB_VAI, KC_BSLS,
+        RGB_MOD, KC_KP_ASTERISK, KC_LEFT_BRACKET, KC_LEFT_CURLY_BRACE, KC_LEFT_PAREN, KC_LEFT_ANGLE_BRACKET, KC_EQL, KC_HOME, RGB_HUI, RGB_SAI, RGB_VAI, KC_BSLS,
         //
-        KC_MUTE, KC_KP_SLASH, KC_MPLY, KC_VOLD, KC_PGDN, KC_MINS, KC_LPRN, _______, KC_PLUS, KC_END, RGB_HUD, RGB_SAD, RGB_VAD, EE_CLR,
+        KC_MUTE, KC_KP_SLASH, KC_RIGHT_BRACKET, KC_RIGHT_CURLY_BRACE, KC_RIGHT_PAREN, KC_RIGHT_ANGLE_BRACKET, LOCK_SCREEN, KC_NO, KC_PLUS, KC_END, RGB_HUD, RGB_SAD, RGB_VAD, EE_CLR,
         //
-        _______, _______, _______, _______, _______, _______
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
         //
         )};
 
@@ -142,15 +148,24 @@ bool rgb_matrix_indicators_advanced_user(uint8_t led_min, uint8_t led_max) {
             return false;
     }
 
+    HSV boot_hsv   = {0, 255, rgb_matrix_get_val()};
+    HSV ee_clr_hsv = {0, 0, rgb_matrix_get_val()};
+    RGB layer_rgb  = hsv_to_rgb(hsv);
     for (uint8_t row = 0; row < MATRIX_ROWS; row++) {
         for (uint8_t col = 0; col < MATRIX_COLS; col++) {
-            uint8_t index = g_led_config.matrix_co[row][col];
-            RGB     rgb   = hsv_to_rgb(hsv);
+            uint8_t  index   = g_led_config.matrix_co[row][col];
+            uint16_t keycode = keymap_key_to_keycode(current_layer, (keypos_t){col, row});
 
-            if (keymap_key_to_keycode(current_layer, (keypos_t){col, row}) > KC_TRNS) {
+            if (keycode == QK_BOOT) {
+                RGB rgb = hsv_to_rgb(boot_hsv);
                 rgb_matrix_set_color(index, rgb.r, rgb.g, rgb.b);
-            } else {
+            } else if (keycode == EE_CLR) {
+                RGB rgb = hsv_to_rgb(ee_clr_hsv);
+                rgb_matrix_set_color(index, rgb.r, rgb.g, rgb.b);
+            } else if (keycode <= KC_NO) {
                 rgb_matrix_set_color(index, HSV_BLACK);
+            } else {
+                rgb_matrix_set_color(index, layer_rgb.r, layer_rgb.g, layer_rgb.b);
             }
         }
     }
@@ -162,8 +177,27 @@ bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record, ui
     switch (other_keycode) {
         case KC_SPC:
         case KC_TAB:
+        case LT(_LOWER, KC_SPC):
             return true;
     }
 
     return achordion_opposite_hands(tap_hold_record, other_record);
+}
+
+uint16_t achordion_timeout(uint16_t tap_hold_keycode) {
+    switch (tap_hold_keycode) {
+        case LT(_LOWER, KC_SPC):
+            return 0;
+    }
+
+    return 1000;
+}
+
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case LT(_LOWER, KC_SPC):
+            return TAPPING_TERM;
+        default:
+            return TAPPING_TERM;
+    }
 }
