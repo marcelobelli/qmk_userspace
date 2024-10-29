@@ -1,12 +1,7 @@
-// Copyright 2023 Danny Nguyen (@nooges)
-// SPDX-License-Identifier: GPL-2.0-or-later
-
 #include <stdbool.h>
 #include <stdint.h>
 #include "action_layer.h"
-#include "action_tapping.h"
 #include "color.h"
-#include "config.h"
 #include "info_config.h"
 #include "keycodes.h"
 #include "keymap_common.h"
@@ -18,14 +13,20 @@
 #include QMK_KEYBOARD_H
 
 #include "features/achordion.h"
+#include "features/layer_lock.h"
 
 #define LOCK_SCREEN LGUI(LCTL(KC_Q))
+#define UNDO LCMD(KC_Z)
+#define REDO LCMD(LSFT(KC_Z))
+#define SELECT_LINE LCMD(KC_LSFT)
+#define SELECT_WORD LOPT(KC_LSFT)
 
 enum custom_layers { _QWERTY, _LOWER, _RAISE };
 
 enum custom_keycodes {
     DOUBLE_EQUAL = SAFE_RANGE,
     NOT_EQUAL,
+    LLOCK,
 };
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -41,7 +42,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐    ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
         // ├   ENT   ┼    Z    ┼    X    ┼    C    ┼    V    ┼    B    ┼   HOME  ┤    ├   END   ┼    N    ┼    M    ┼    ,    ┼    .    ┼    /    ┼    `    ┤
         // ├─────────┴─────────┴─────────┴────┬────┴────┬────┴────┬────┴────┬────┘    └────┬────┴────┬────┴────┬────┴────┬────┴─────────┴─────────┴─────────┘
-        //                                    ├  LCMD   ┼LOWER/SPC┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
+        //                                    ├   SFT   ┼   CMD   ┼LOWER/SPC┤              ├UPPER/ENT┼   CTL   ┼HYPR/BSPC┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
         //
         KC_EQL, KC_1, KC_2, KC_3, KC_4, KC_5, KC_6, KC_7, KC_8, KC_9, KC_0, KC_MINS,
@@ -52,64 +53,67 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //
         KC_ENT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_HOME, KC_END, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_GRV,
         //
-        KC_LGUI, KC_BSPC, LT(_LOWER, KC_SPC), KC_ENT, MO(_RAISE), KC_BSPC
+        KC_LSFT, KC_LCMD, LT(_LOWER, KC_SPC), LT(_RAISE, KC_ENT), KC_RCTL, HYPR_T(KC_BSPC)
         //
         ),
 
     [_LOWER] = LAYOUT(
         //
         // ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐                        ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
-        // ├    =    ┼    1    ┼    2    ┼    3    ┼    4    ┼    5    ┤                        ├    6    ┼    7    ┼    8    ┼    9    ┼    0    ┼    -    ┤
+        // ├  BOOT   ┼ EE CLR  ┼         ┼         ┼         ┼         ┤                        ├         ┼         ┼         ┼         ┼         ┼         ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├   TAB   ┼    Q    ┼    W    ┼    E    ┼    R    ┼    T    ┤                        ├    Y    ┼    U    ┼    I    ┼    O    ┼    P    ┼    \    ┤
+        // ├   TAB   ┼         ┼         ┼         ┼         ┼         ┤                        ├         ┼         ┼         ┼         ┼  UNDO   ┼  REDO   ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├   ESC   ┼ LSFT/A  ┼ LCTL/S  ┼ LOPT/D  ┼ LCMD/F  ┼ RCMD/G  ┤                        ├  LEFT   ┼  DOWN   ┼   UP    ┼  RIGHT  ┼ RSFT/;  ┼    '    ┤
+        // ├   ESC   ┼   SFT   ┼   CTL   ┼   OPT   ┼   CMD   ┼         ┤                        ├  LEFT   ┼  DOWN   ┼   UP    ┼  RIGHT  ┼         ┼         ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐    ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├   ENT   ┼    Z    ┼    X    ┼    C    ┼    V    ┼    B    ┼   HOME  ┤    ├   END   ┼    N    ┼    M    ┼    ,    ┼    .    ┼    /    ┼    `    ┤
+        // ├         ┼         ┼         ┼SELECT_W ┼SELECT_L ┼         ┼         ┤    ├ LYR LCK ┼         ┼         ┼         ┼         ┼         ┼         ┤
         // ├─────────┴─────────┴─────────┴────┬────┴────┬────┴────┬────┴────┬────┘    └────┬────┴────┬────┴────┬────┴────┬────┴─────────┴─────────┴─────────┘
-        //                                    ├  LCMD   ┼  LOWER  ┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
+        //                                    ├         ┼         ┼         ┤              ├   ENT   ┼         ┼   DEL   ┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
         //
-        KC_TILD, KC_EXLM, KC_AT, KC_HASH, KC_DLR, KC_PERC, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, KC_PGUP,
+        QK_BOOT, EE_CLR, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
         //
-        KC_GRV, KC_NO, KC_NO, KC_NO, QK_BOOT, KC_LBRC, KC_RBRC, KC_NO, KC_NO, KC_NO, KC_NO, KC_PGDN,
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, UNDO, REDO,
         //
-        KC_DEL, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_PLUS, KC_BSLS,
+        KC_NO, KC_LSFT, KC_LCTL, KC_LOPT, KC_LCMD, KC_NO, KC_LEFT, KC_DOWN, KC_UP, KC_RGHT, KC_NO, KC_NO,
         //
-        RGB_MOD, EE_CLR, KC_NO, KC_NO, KC_NO, KC_LCBR, KC_LPRN, KC_RPRN, KC_RCBR, KC_P1, KC_P2, KC_P3, KC_MINS, KC_NO,
+        KC_NO, KC_NO, KC_NO, SELECT_WORD, SELECT_LINE, KC_NO, KC_NO, LLOCK, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
         //
-        KC_NO, KC_NO, KC_DEL, KC_DEL, KC_NO, KC_P0
+        KC_NO, KC_NO, KC_NO, KC_ENT, KC_NO, KC_DEL
         //
         ),
 
     [_RAISE] = LAYOUT(
         //
         // ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐                        ┌─────────┬─────────┬─────────┬─────────┬─────────┬─────────┐
-        // ├         ┼         ┼         ┼         ┼         ┼         ┤                        ├         ┼         ┼         ┼         ┼         ┼  BOOT   ┤
+        // ├         ┼         ┼         ┼         ┼         ┼         ┤                        ├         ┼         ┼         ┼         ┼ EE CLR  ┼  BOOT   ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├         ┼    -    ┼    +    ┼    =    ┼   ==    ┼   !=    ┤                        ├    Y    ┼    U    ┼    I    ┼    O    ┼    P    ┼ EE CLR  ┤
+        // ├         ┼    _    ┼    /    ┼    +    ┼    -    ┼    *    ┤                        ├         ┼         ┼         ┼         ┼         ┼         ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├         ┼    *    ┼    [    ┼    {    ┼    (    ┼    <    ┤                        ├ RCMD/H  ┼ LCMD/J  ┼ ROPT/K  ┼ RCTL/L  ┼ RSFT/;  ┼         ┤
+        // ├         ┼    :    ┼    [    ┼    {    ┼    (    ┼    <    ┤                        ├         ┼  PLAY   ┼PREVIOUS ┼  NEXT   ┼         ┼         ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐    ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├         ┼    /    ┼    ]    ┼    }    ┼    )    ┼    >    ┼ LCK SCR ┤    ├   END   ┼         ┼  MUTE   ┼  VOL -  ┼  VOL +  ┼    /    ┼         ┤
+        // ├         ┼         ┼    ]    ┼    }    ┼    )    ┼    >    ┼ LCK SCR ┤    ├   END   ┼         ┼  MUTE   ┼  VOL -  ┼  VOL +  ┼         ┼         ┤
         // ├─────────┴─────────┴─────────┴────┬────┴────┬────┴────┬────┴────┬────┘    └────┬────┴────┬────┴────┬────┴────┬────┴─────────┴─────────┴─────────┘
-        //                                    ├  LCMD   ┼  LOWER  ┼   SPC   ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
+        //                                    ├   !=    ┼    =    ┼   ==    ┤              ├   ENT   ┼  UPPER  ┼  BSPC   ┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
         //
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
+        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, EE_CLR, QK_BOOT,
         //
-        KC_NO, KC_KP_MINUS, KC_KP_PLUS, KC_KP_EQUAL, DOUBLE_EQUAL, NOT_EQUAL, KC_CIRC, KC_AMPR, KC_ASTR, KC_LPRN, KC_RPRN, QK_BOOT,
+        KC_NO, KC_UNDS, KC_KP_SLASH, KC_KP_PLUS, KC_KP_MINUS, KC_KP_ASTERISK, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO,
         //
-        RGB_MOD, KC_KP_ASTERISK, KC_LEFT_BRACKET, KC_LEFT_CURLY_BRACE, KC_LEFT_PAREN, KC_LEFT_ANGLE_BRACKET, KC_EQL, KC_HOME, RGB_HUI, RGB_SAI, RGB_VAI, KC_BSLS,
+        KC_NO, LSFT(KC_SCLN), KC_LEFT_BRACKET, KC_LEFT_CURLY_BRACE, KC_LEFT_PAREN, KC_LEFT_ANGLE_BRACKET, KC_NO, KC_MPLY, KC_MPRV, KC_MNXT, KC_NO, KC_NO,
         //
-        KC_MUTE, KC_KP_SLASH, KC_RIGHT_BRACKET, KC_RIGHT_CURLY_BRACE, KC_RIGHT_PAREN, KC_RIGHT_ANGLE_BRACKET, LOCK_SCREEN, KC_NO, KC_PLUS, KC_END, RGB_HUD, RGB_SAD, RGB_VAD, EE_CLR,
+        KC_NO, KC_NO, KC_RIGHT_BRACKET, KC_RIGHT_CURLY_BRACE, KC_RIGHT_PAREN, KC_RIGHT_ANGLE_BRACKET, LOCK_SCREEN, KC_NO, KC_NO, KC_MUTE, KC_VOLD, KC_VOLU, KC_NO, KC_NO,
         //
-        KC_NO, KC_NO, KC_NO, KC_NO, KC_NO, KC_NO
+        NOT_EQUAL, KC_KP_EQUAL, DOUBLE_EQUAL, KC_NO, KC_NO, KC_NO
         //
         )};
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (!process_achordion(keycode, record)) {
+        return false;
+    }
+    if (!process_layer_lock(keycode, record, LLOCK)) {
         return false;
     }
 
@@ -177,7 +181,9 @@ bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record, ui
     switch (other_keycode) {
         case KC_SPC:
         case KC_TAB:
+        case HYPR_T(KC_BSPC):
         case LT(_LOWER, KC_SPC):
+        case LT(_RAISE, KC_ENT):
             return true;
     }
 
@@ -186,18 +192,11 @@ bool achordion_chord(uint16_t tap_hold_keycode, keyrecord_t *tap_hold_record, ui
 
 uint16_t achordion_timeout(uint16_t tap_hold_keycode) {
     switch (tap_hold_keycode) {
+        case HYPR_T(KC_BSPC):
         case LT(_LOWER, KC_SPC):
+        case LT(_RAISE, KC_ENT):
             return 0;
     }
 
     return 1000;
-}
-
-uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
-    switch (keycode) {
-        case LT(_LOWER, KC_SPC):
-            return TAPPING_TERM;
-        default:
-            return TAPPING_TERM;
-    }
 }

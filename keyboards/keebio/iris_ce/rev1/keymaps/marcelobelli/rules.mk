@@ -1,4 +1,5 @@
 SRC += features/achordion.c
+SRC += features/layer_lock.c
 
-# TRI_LAYER_ENABLE = yes
-# CONSOLE_ENABLE = yes
+CAPS_WORD_ENABLE = yes
+
