@@ -40,7 +40,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤                        ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
         // ├   ESC   ┼ LSFT/A  ┼ LCTL/S  ┼ LOPT/D  ┼ LCMD/F  ┼ RCMD/G  ┤                        ├ RCMD/H  ┼ LCMD/J  ┼ ROPT/K  ┼ RCTL/L  ┼ RSFT/;  ┼    '    ┤
         // ├─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┐    ┌─────────┼─────────┼─────────┼─────────┼─────────┼─────────┼─────────┤
-        // ├   ENT   ┼    Z    ┼    X    ┼    C    ┼    V    ┼    B    ┼   HOME  ┤    ├   END   ┼    N    ┼    M    ┼    ,    ┼    .    ┼    /    ┼    `    ┤
+        // ├   ENT   ┼    Z    ┼    X    ┼    C    ┼    V    ┼    B    ┼   HOME  ┤    ├ROPT+RCMD┼    N    ┼    M    ┼    ,    ┼    .    ┼    /    ┼    `    ┤
         // ├─────────┴─────────┴─────────┴────┬────┴────┬────┴────┬────┴────┬────┘    └────┬────┴────┬────┴────┬────┴────┬────┴─────────┴─────────┴─────────┘
         //                                    ├   SFT   ┼   CMD   ┼LOWER/SPC┤              ├UPPER/ENT┼   CTL   ┼HYPR/BSPC┤
         //                                    └─────────┴─────────┴─────────┘              └─────────┴─────────┴─────────┘
@@ -51,7 +51,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         //
         KC_ESC, SFT_T(KC_A), CTL_T(KC_S), LOPT_T(KC_D), LCMD_T(KC_F), RCMD_T(KC_G), RCMD_T(KC_H), LCMD_T(KC_J), ROPT_T(KC_K), RCTL_T(KC_L), RSFT_T(KC_SCLN), KC_QUOT,
         //
-        KC_ENT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_HOME, KC_END, KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_GRV,
+        KC_ENT, KC_Z, KC_X, KC_C, KC_V, KC_B, KC_HOME, ROPT(KC_RCMD), KC_N, KC_M, KC_COMM, KC_DOT, KC_SLSH, KC_GRV,
         //
         KC_LSFT, KC_LCMD, LT(_LOWER, KC_SPC), LT(_RAISE, KC_ENT), KC_RCTL, HYPR_T(KC_BSPC)
         //
